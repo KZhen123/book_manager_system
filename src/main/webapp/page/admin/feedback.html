@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <base href="http://localhost:8080/book_manager_system/">
+    <link href="layui/css/layui.css" rel="stylesheet"/>
+</head>
+<body>
+
+<table class="layui-hide" id="ID-table-demo-search" lay-filter="currentTableFilter"></table>
+
+<script type="text/html" id="currentTableBar">
+    <a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="edit">查看详情</a>
+    {{#  if(d.status== "0"){ }}
+    <a class="layui-btn layui-btn-primary layui-border-blue layui-btn-xs" lay-event="changeTrue">置为已解决</a>
+    {{#  } }}
+    {{#  if(d.status== "1"){ }}
+    <a class="layui-btn layui-btn-primary layui-border-red layui-btn-xs" lay-event="changeFalse">置为未解决</a>
+    {{#  } }}
+    <a class="layui-btn layui-btn-xs layui-btn-danger data-count-delete" lay-event="delete">删除</a>
+</script>
+
+<!--弹窗 查看详情-->
+<div id="add-main" style="display: none;">
+    <form class="layui-form" id="add-form2"  action="" lay-filter="layui-edit-form">
+        <div class="layui-form-item center" >
+            <label class="layui-form-label" style="width: 100px" >读者昵称</label>
+            <div class="layui-input-block">
+                <input type="text" name="username" disabled style="width: 240px" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item center" >
+            <label class="layui-form-label" style="width: 100px" >联系电话</label>
+            <div class="layui-input-block">
+                <input type="text" name="phone" disabled style="width: 240px" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item center" >
+            <label class="layui-form-label" style="width: 100px" >反馈标题</label>
+            <div class="layui-input-block">
+                <input type="text" name="title" disabled style="width: 240px"  autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item center" >
+            <label class="layui-form-label" style="width: 100px" >反馈页面</label>
+            <div class="layui-input-block">
+                <input type="text" name="page" disabled style="width: 240px"  autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item center" >
+            <label class="layui-form-label" style="width: 100px" >反馈内容</label>
+            <div class="layui-input-block">
+                <textarea name="content" disabled style="width: 240px" autocomplete="off" class="layui-textarea"></textarea>
+            </div>
+        </div>
+        <div class="layui-form-item center" >
+            <label class="layui-form-label" style="width: 100px" >反馈时间</label>
+            <div class="layui-input-block">
+                <input type="text" name="time" disabled style="width: 240px"  autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item center" >
+            <label class="layui-form-label" style="width: 100px" >问题状态</label>
+            <div class="layui-input-block">
+                <input type="text" name="status" disabled style="width: 240px"  autocomplete="off" class="layui-input">
+            </div>
+        </div>
+    </form>
+</div>
+
+<script src="layui/layui.js"></script>
+<script>
+layui.use(function(){
+          var $ = layui.jquery,
+            form = layui.form,
+            table = layui.table,
+            laydate=layui.laydate;
+  // 创建表格实例
+  table.render({
+        elem: '#ID-table-demo-search',
+        url: 'feedback/selectPage',
+        parseData: function (res) { //res 即为原始返回的数据
+            return {
+                "status": res.code, //解析接口状态
+                "message": res.msg, //解析提示文本
+                "count": res.count, //解析数据长度
+                "data": res.data //解析数据列表
+            };
+        },
+        where: {
+            type:"1"
+        },
+        response: {
+            statusName: 'status' //规定数据状态的字段名称，默认：code
+            ,statusCode: 200 //规定成功的状态码，默认：0
+            ,msgName: 'message' //规定状态信息的字段名称，默认：msg
+            ,countName: 'count' //规定数据总数的字段名称，默认：count
+            ,dataName: 'data' //规定数据列表的字段名称，默认：data
+        },
+        request: {
+            pageName: 'page', //页码的参数名称，默认：page
+            limitName: 'size' //每页数据量的参数名，默认：limit
+        },
+
+        toolbar: '#toolbarDemo',
+        defaultToolbar: ['filter', 'exports', 'print'],
+        cellMinWidth:80,
+        //这里layui和thymeleaf冲突了，要加个空格
+        cols: [ [
+            {field: 'id', width: 150, title: '序号', sort: true},
+            {field: 'username', width: 150, title: '读者昵称', sort: true},
+            {field: 'phone', width: 200, title: '联系电话'},
+            {field: 'title', width: 150, title: '反馈标题'},
+            {field: 'page', width: 150, title: '反馈页面'},
+            {field: 'content', width: 200, title: '反馈内容'},
+            {field: 'time', width: 200, title: '反馈时间', sort: true},
+            {field: 'status', width: 130, title: '问题状态', sort: true, templet: function(d){
+                if(d.status === 1){
+                  return '<i class="layui-icon layui-icon-success" style="font-size: 30px; color: #1E9FFF;"></i>';
+                } else {
+                  return '<i class="layui-icon layui-icon-error" style="font-size: 30px; color: #FF0000;"></i>';
+                }
+            }},
+            {title: '操作', toolbar: '#currentTableBar', align: "center"}
+        ]],
+        limits: [10, 15, 20, 25, 50],
+        limit: 10,
+        page: true,
+        skin: 'line'
+  });
+
+
+ table.on('tool(currentTableFilter)', function (obj) {
+            let data = obj.data;
+            if (obj.event === 'edit') {
+                var index = layer.open({
+                    type: 1,
+                    title: "查看反馈",
+                    shadeClose: true,
+                    area: ['600px', '500px'],
+                    shadeClose: true,
+                    content: $("#add-main"),
+                    success: function () {
+                        // 数据回显
+                        form.val("layui-edit-form", {
+                            "username": data.username,
+                            "phone": data.phone,
+                            "title": data.title,
+                            "page": data.page,
+                            "content": data.content,
+                            "time": data.time,
+                            "status": data.status,
+                        })
+                    }
+                })
+            } else if (obj.event === 'delete') {
+                var req={};
+                req.id=data.id;
+                layer.confirm('确定删除吗', {icon: 2, title: '提示'}, function (index) {
+                    $.ajax({
+                        url: 'feedback/delete',
+                        dataType:'json',
+                        contentType: "application/json;charset=utf-8",
+                        data:req,
+                        beforeSend:function () {
+                            this.layerIndex = layer.load(0, { shade: [0.5, '#393D49'] });
+                        },
+                        success:function(data){
+                            layer.close(this.layerIndex);
+                            if(data.status >= 300){
+                                layer.msg(data.statusInfo.message);//失败的表情
+                                return;
+                            }else{
+                                obj.del();
+                                layer.msg("删除成功", {
+                                    icon: 6,//成功的表情
+                                    time: 500 //1秒关闭（如果不配置，默认是3秒）
+                                });
+                            }
+                        }
+                    })
+                });
+            }else if(obj.event === 'changeTrue'){
+                var req={};
+                req.id=data.id;
+                layer.confirm('确定已解决吗', {icon: 1, title: '提示'}, function (index) {
+                    $.ajax({
+                        url: 'feedback/changeTrue',
+                        dataType:'json',
+                        contentType: "application/json;charset=utf-8",
+                        data:req,
+                        success:function(data){
+                            if(data.status >= 300){
+                                layer.msg(data.statusInfo.message);//失败的表情
+                                return;
+                            }else{
+                                layer.msg("修改成功", {
+                                    icon: 6,//成功的表情
+                                    time: 500 //1秒关闭（如果不配置，默认是3秒）
+                                },function(){
+                                    location.reload(); // 页面刷新
+                                         return false
+                                });
+                            }
+                        }
+                    })
+                });
+            }else{
+                var req={};
+                req.id=data.id;
+                layer.confirm('确定未解决吗', {icon: 2, title: '提示'}, function (index) {
+                    $.ajax({
+                        url: 'feedback/changeFalse',
+                        dataType:'json',
+                        contentType: "application/json;charset=utf-8",
+                        data:req,
+                        success:function(data){
+                            if(data.status >= 300){
+                                layer.msg(data.msg);//失败的表情
+                                return;
+                            }else{
+                                layer.msg("修改成功", {
+                                    icon: 6,//成功的表情
+                                    time: 500 //1秒关闭（如果不配置，默认是3秒）
+                                },function(){
+                                    location.reload(); // 页面刷新
+                                         return false
+                                });
+                            }
+                        }
+                    })
+                });
+            }
+        });
+
+});
+
+
+</script>
+
+</body>
+</html>

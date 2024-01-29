@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <base href="http://localhost:8080/book_manager_system/">
+    <link href="layui/css/layui.css" rel="stylesheet"/>
+</head>
+<body>
+
+<div class="layui-container">
+    <div class="layui-row layui-col-space15">
+        <div class="layui-col-xs12 layui-col-md3">
+            <div id="echarts-pies" style="background-color:#ffffff;min-height:400px;padding: 10px"></div>
+        </div>
+    </div>
+</div>
+
+<script src="layui/layui.js"></script>
+<script src="scripts/echarts/echarts.js"></script>
+<script src="scripts/jquery.min.js"></script>
+<script type="text/javascript">
+    /**
+     * 玫瑰图表
+     */
+    var echartsPies = echarts.init(document.getElementById('echarts-pies'), 'walden');
+
+
+    $(function(){
+        $.ajax({
+            "url":"borrow/pie",
+            "type":"POST",
+            "success":function(data){
+                // console.log(data);
+
+                var optionPies = {
+                    title: {
+                        text: '借阅分布图',
+                        left: 'center'
+                    },
+                    tooltip: {
+                        trigger: 'item',
+                        formatter: '{a} <br/>{b} : {c} ({d}%)'
+                    },
+                    series: [
+                        {
+                            name: '占比',
+                            type: 'pie',
+                            radius: '50%',
+                            center: ['50%', '60%'],
+                            roseType: 'radius',
+                            data: data,
+                            emphasis: {
+                                itemStyle: {
+                                    shadowBlur: 10,
+                                    shadowOffsetX: 0,
+                                    shadowColor: 'rgba(0, 0, 0, 0.5)'
+                                }
+                            }
+                        }
+                    ]
+                };
+                echartsPies.setOption(optionPies);
+            }
+
+        });
+    })
+
+</script>
+
+<style>
+    .layui-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh; /* 使容器铺满整个视口高度 */
+    }
+</style>
+
+</body>
+</html>

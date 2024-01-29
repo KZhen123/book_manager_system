@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <base href="http://localhost:8080/book_manager_system/">
+    <link href="layui/css/layui.css" rel="stylesheet"/>
+</head>
+<body>
+
+<table class="layui-hide" id="ID-table-demo-search" lay-filter="currentTableFilter"></table>
+
+<!--列表顶部操作栏-->
+<script type="text/html" id="toolbarDemo">
+    <div class="layui-btn-container">
+        <button class="layui-btn layui-btn-normal layui-btn-sm data-add-btn" lay-event="add"> 我要反馈</button>
+    </div>
+</script>
+
+<!--添加-->
+<div id="add-main" style="display: none;">
+    <form class="layui-form" id="add-form2"  action="" lay-filter="layui-edit-form">
+        <div class="layui-form-item center" >
+            <label class="layui-form-label" style="width: 100px" >联系电话</label>
+            <div class="layui-input-block">
+                <input type="text" name="phone" required style="width: 240px" autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item center" >
+            <label class="layui-form-label" style="width: 100px" >反馈标题</label>
+            <div class="layui-input-block">
+                <input type="text" name="title" required  style="width: 240px"  autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item center" >
+            <label class="layui-form-label" style="width: 100px" >反馈页面</label>
+            <div class="layui-input-block">
+                <input type="text" name="page" required  style="width: 240px"  autocomplete="off" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item center" >
+            <label class="layui-form-label" style="width: 100px" >反馈内容</label>
+            <div class="layui-input-block">
+                <textarea name="content" required style="width: 240px" autocomplete="off" class="layui-textarea"></textarea>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button class="layui-btn" lay-submit lay-filter="save" >提交</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script src="layui/layui.js"></script>
+<script src="scripts/jquery.min.js"></script>
+<script>
+layui.use(function(){
+          var $ = layui.jquery,
+            form = layui.form,
+            table = layui.table,
+            laydate=layui.laydate;
+      // 创建表格实例
+      table.render({
+            elem: '#ID-table-demo-search',
+            url: 'feedback/selectUserPage',
+            parseData: function (res) { //res 即为原始返回的数据
+                return {
+                    "status": res.code, //解析接口状态
+                    "message": res.msg, //解析提示文本
+                    "count": res.count, //解析数据长度
+                    "data": res.data //解析数据列表
+                };
+            },
+            where: {
+                type:"1"
+            },
+            response: {
+                statusName: 'status' //规定数据状态的字段名称，默认：code
+                ,statusCode: 200 //规定成功的状态码，默认：0
+                ,msgName: 'message' //规定状态信息的字段名称，默认：msg
+                ,countName: 'count' //规定数据总数的字段名称，默认：count
+                ,dataName: 'data' //规定数据列表的字段名称，默认：data
+            },
+            request: {
+                pageName: 'page', //页码的参数名称，默认：page
+                limitName: 'size' //每页数据量的参数名，默认：limit
+            },
+
+            toolbar: '#toolbarDemo',
+            defaultToolbar: ['filter', 'exports', 'print'],
+            cellMinWidth:80,
+            //这里layui和thymeleaf冲突了，要加个空格
+            cols: [ [
+                {field: 'id', width: 150, title: '序号', sort: true},
+                {field: 'username', width: 150, title: '读者昵称', sort: true},
+                {field: 'phone', width: 200, title: '联系电话'},
+                {field: 'title', width: 150, title: '反馈标题'},
+                {field: 'page', width: 150, title: '反馈页面'},
+                {field: 'content', width: 200, title: '反馈内容'},
+                {field: 'time', width: 200, title: '反馈时间', sort: true},
+                {field: 'status', title: '问题状态', sort: true, templet: function(d){
+                    if(d.status === 1){
+                      return '<i class="layui-icon layui-icon-success" style="font-size: 30px; color: #1E9FFF;"></i>';
+                    } else {
+                      return '<i class="layui-icon layui-icon-error" style="font-size: 30px; color: #FF0000;"></i>';
+                    }
+                }}
+            ]],
+            limits: [10, 15, 20, 25, 50],
+            limit: 10,
+            page: true,
+            skin: 'line'
+      });
+
+
+        /**
+         * toolbar监听事件
+         */
+        table.on('toolbar(currentTableFilter)', function (obj) {
+            // 弹窗
+            layer.open({
+                type: 1,
+                title:"新增反馈",
+                closeBtn: true,
+                shift: 2,
+                area: ['500px', '400px'],
+                shadeClose: true,
+                content: $("#add-main")
+            });
+        });
+
+        //提交监听事件
+        form.on('submit(save)', function (data) {
+            params = data.field;
+            //alert(JSON.stringify(params))
+            submit($,params);
+            return false;
+        })
+
+        //新增 提交
+        function submit($,params){
+            $.post('feedback/add', params, function (res) {
+                if (res.code==200) {
+                    layer.msg(res.msg,{icon:1},function(index){
+                        CloseWin();
+                    })
+                }
+                else{
+                    layer.msg(res.msg,{icon:0},function(){
+                        location.reload(); // 页面刷新
+                             return false
+                    })
+                }
+            }, 'json');
+       }
+
+
+});
+
+   //关闭页面
+   function CloseWin(){
+         location.reload(); // 页面刷新
+         var index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+         parent.layer.close(index); //再执行关闭
+   }
+
+
+</script>
+
+</body>
+</html>

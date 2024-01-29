@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>登录</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <base href="http://localhost:8080/book_manager_system/">
+    <script type="text/javascript" src="scripts/jquery-1.7.2.js"></script>
+    <link type="text/css" rel="stylesheet" href="css/style.css" >
+    <script src="layui/layui.js"></script>
+</head>
+
+<body>
+<div class="container">
+    <div class="login-wrapper">
+        <div class="header">图书管理系统</div>
+        <div class="header2">登录</div>
+
+        <div id="hidden-msg" th:text="${#request.getAttribute('msg')}" style="display: none;"></div>
+
+        <div class="form-wrapper">
+            <form id="loginForm" method="post" action="user/login">
+                <input type="text" name="username" placeholder="用户名" class="input-item">
+                <input type="password" name="password" placeholder="密码" class="input-item">
+                <label>验证码：</label>
+                <input class="itxt" type="text" name="code" style="width: 150px;"/>
+                <img id="code_img" src="Kaptcha.jpg" style="float: right; margin-right: 20px; width: 80px; height: 33px;">
+                <input type="submit" value="登录" class="btn">
+            </form>
+        </div>
+        <div class="msg">
+            没有账户?
+            <a href="page/user/register.html">点击注册</a>
+        </div>
+    </div>
+
+    <div th:include="common/footer :: footer"></div>
+</div>
+
+
+<script th:inline="javascript">
+    $(function(){
+        $("#code_img").click(function(){
+            this.src = "Kaptcha.jpg";
+        })
+    })
+
+    layui.use(['layer', 'form'], function () {
+        let layer = layui.layer;
+        let form = layui.form;
+
+        // 渲染表单元素
+        form.render();
+
+        $(function () {
+            // 获取后端传递的消息
+            var msg = $("#hidden-msg").text().trim();
+
+            // 判断消息是否非空
+            if (msg && msg.trim() !== '') {
+                // 弹出消息
+                layer.msg(msg, {
+                    icon: 2,
+                    time: 2000 // 2秒关闭
+                });
+            }
+        });
+    });
+</script>
+</body>
+</html>

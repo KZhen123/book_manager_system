@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="zh-CN" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <base href="http://localhost:8080/book_manager_system/">
+    <link href="layui/css/layui.css" rel="stylesheet"/>
+</head>
+<body>
+
+<table class="layui-hide" id="ID-table-demo-search" lay-filter="currentTableFilter"></table>
+
+<script type="text/html" id="currentTableBar">
+    {{#  if(d.backTime < d.borrowTime){ }}
+    <a class="layui-btn layui-btn-normal layui-btn-xs data-count-edit" lay-event="back">还书</a>
+    {{#  } }}
+    {{#  if(d.backTime >= d.borrowTime){ }}
+    <a class="layui-btn layui-btn-primary layui-border-red layui-btn-xs" disabled >已归还</a>
+    {{#  } }}
+    <a class="layui-btn layui-btn-xs layui-btn-danger data-count-delete" lay-event="delay">延期</a>
+</script>
+
+<script src="layui/layui.js"></script>
+<script>
+    layui.use(function(){
+          var $ = layui.jquery,
+            form = layui.form,
+            table = layui.table,
+            laydate=layui.laydate;
+          // 创建表格实例
+          table.render({
+            elem: '#ID-table-demo-search',
+            url: 'borrow/selectPage',
+            parseData: function (res) { //res 即为原始返回的数据
+                return {
+                    "status": res.code, //解析接口状态
+                    "message": res.msg, //解析提示文本
+                    "count": res.count, //解析数据长度
+                    "data": res.data //解析数据列表
+                };
+            },
+            where: {
+                type:"1"
+            },
+            response: {
+                statusName: 'status' //规定数据状态的字段名称，默认：code
+                ,statusCode: 200 //规定成功的状态码，默认：0
+                ,msgName: 'message' //规定状态信息的字段名称，默认：msg
+                ,countName: 'count' //规定数据总数的字段名称，默认：count
+                ,dataName: 'data' //规定数据列表的字段名称，默认：data
+            },
+            request: {
+                pageName: 'page', //页码的参数名称，默认：page
+                limitName: 'size' //每页数据量的参数名，默认：limit
+            },
+
+            toolbar: '#toolbarDemo',
+            defaultToolbar: ['filter', 'exports', 'print'],
+            cellMinWidth:80,
+            //这里layui和thymeleaf冲突了，要加个空格
+            cols: [ [
+                {field: 'id', width: 150, title: '序号', sort: true},
+                {field: 'bookName', width: 200, title: '图书名称'},
+                {field: 'userName', width: 200, title: '读者昵称', sort: true},
+                {field: 'borrowTime', width: 200, title: '借阅时间', sort: true},
+                {field: 'backTime', width: 200, title: '归还时间', sort: true, templet: function(d){
+                    if(d.backTime < d.borrowTime){
+                      return '<span class="layui-badge-rim" style="margin-right: 10px">未归还</span>';
+                    }else{
+                        return d.backTime;
+                    }
+                }},
+                {field: 'endTime', width: 200, title: '截止时间', sort: true},
+                {title: '操作', toolbar: '#currentTableBar', align: "center"}
+            ]],
+            limits: [10, 15, 20, 25, 50],
+            limit: 10,
+            page: true,
+            skin: 'line'
+          });
+
+
+          table.on('tool(currentTableFilter)', function (obj) {
+            let data = obj.data;
+
+            if (obj.event === 'back') {
+                var req={};
+                req.id=data.id;
+                layer.confirm('确定还书吗', {icon: 2, title: '提示'}, function (index) {
+                    $.ajax({
+                        url: 'borrow/back',
+                        dataType:'json',
+                        contentType: "application/json;charset=utf-8",
+                        data:req,
+                        success:function(data){
+                            if(data.status >= 300){
+                                layer.msg(data.msg);//失败的表情
+                                return;
+                            }else{
+                                layer.msg("修改成功", {
+                                    icon: 6,//成功的表情
+                                    time: 500 //1秒关闭（如果不配置，默认是3秒）
+                                },function(){
+                                    location.reload(); // 页面刷新
+                                         return false
+                                });
+                            }
+                        }
+                    })
+                });
+            } else if (obj.event === 'delay') {
+                var req={};
+                req.id=data.id;
+                req.endTime = data.endTime;
+                layer.confirm('点击确定将延期一个月！', {icon: 2, title: '提示'}, function (index) {
+                    $.ajax({
+                        url: 'borrow/delay',
+                        dataType:'json',
+                        contentType: "application/json;charset=utf-8",
+                        data:req,
+                        success:function(data){
+                            if(data.status >= 300){
+                                layer.msg(data.statusInfo.message);//失败的表情
+                                return;
+                            }else{
+                                layer.msg("修改成功", {
+                                    icon: 6,//成功的表情
+                                    time: 500 //1秒关闭（如果不配置，默认是3秒）
+                                },function(){
+                                    location.reload(); // 页面刷新
+                                         return false
+                                });
+                            }
+                        }
+                    })
+                });
+            }
+          });
+
+    });
+
+
+</script>
+
+</body>
+</html>
